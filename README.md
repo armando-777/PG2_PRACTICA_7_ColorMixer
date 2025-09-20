@@ -146,7 +146,7 @@ class NodoAuto:
 * Instalación desde PyPI (Recomendado)
 
 ```bash
-pip install color_mixer
+pip install color-mixer
 ``` 
 
 * Instalación desde código fuente
