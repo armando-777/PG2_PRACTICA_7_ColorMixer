@@ -7,12 +7,14 @@ import os
 from typing import List, Dict, Optional
 from .estructuras import Color, Auto, ListaEnlazadaColores
 
+
 class NodoAuto:
     """Nodo para la lista enlazada de automóviles."""
     
     def __init__(self, auto: Auto):
         self.auto = auto
         self.siguiente = None
+
 
 class ListaEnlazadaAutos:
     """Lista enlazada específica para gestionar automóviles."""
@@ -62,23 +64,29 @@ class ListaEnlazadaAutos:
             yield actual.auto
             actual = actual.siguiente
 
+
 class InventarioManager:
     """Gestor de inventario de automóviles - Singleton pattern."""
     
     _instancia = None
     _inicializado = False
     
-    def __new__(cls):
+    def __new__(cls, ruta_guardado: str = None):  # ✅ CORREGIDO: Acepta parámetros
         if cls._instancia is None:
             cls._instancia = super().__new__(cls)
         return cls._instancia
     
-    def __init__(self):
+    def __init__(self, ruta_guardado: str = None):
         if not InventarioManager._inicializado:
             self.inventario = ListaEnlazadaAutos()
-            self.archivo_datos = 'inventario_autos.json'
+            self.archivo_datos = ruta_guardado or 'inventario_autos.json'
             self._cargar_inventario()
             InventarioManager._inicializado = True
+    
+    def configurar_ruta_guardado(self, ruta: str):
+        """Configura la ruta de guardado del inventario."""
+        self.archivo_datos = ruta
+        self._cargar_inventario()
     
     def registrar_auto(self, modelo: str, codigo_color: str, colores_mezcla: List[Color], porcentajes: List[float]) -> bool:
         """Registra un nuevo auto en el inventario."""
@@ -256,6 +264,9 @@ class InventarioManager:
                     'colores_mezcla': colores_data,
                     'porcentajes': auto.porcentajes
                 })
+            
+            # Crear directorio si no existe
+            os.makedirs(os.path.dirname(self.archivo_datos), exist_ok=True)
             
             with open(self.archivo_datos, 'w', encoding='utf-8') as f:
                 json.dump(datos, f, indent=2, ensure_ascii=False)

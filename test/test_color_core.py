@@ -4,8 +4,48 @@ import os
 
 sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..', 'src'))
 
-from color_mixer.color_core import ColorMixerCore, ColorFactory, ColorHistory
+from color_mixer.color_core import ColorMixerCore, ColorFactory, ColorHistory, ColorBlender
 from color_mixer.estructuras import Color
+
+
+class TestColorBlender(unittest.TestCase):
+    """Tests para la clase ColorBlender."""
+    
+    def setUp(self):
+        self.blender = ColorBlender()
+    
+    def test_mezcla_basica(self):
+        """Test mezcla básica de dos colores."""
+        rojo = Color(255, 0, 0, "Rojo")
+        azul = Color(0, 0, 255, "Azul")
+        
+        resultado = self.blender.mezclar([rojo, azul], [50.0, 50.0])
+        
+        self.assertIsInstance(resultado, Color)
+        self.assertGreater(resultado.r, 0)
+        self.assertGreater(resultado.b, 0)
+    
+    def test_mezcla_sin_colores(self):
+        """Test mezclar sin colores debe lanzar error."""
+        with self.assertRaises(ValueError):
+            self.blender.mezclar([], [])
+    
+    def test_porcentajes_no_suman_100(self):
+        """Test que porcentajes deben sumar 100."""
+        rojo = Color(255, 0, 0, "Rojo")
+        azul = Color(0, 0, 255, "Azul")
+        
+        with self.assertRaises(ValueError):
+            self.blender.mezclar([rojo, azul], [60.0, 60.0])
+    
+    def test_colores_y_porcentajes_diferentes(self):
+        """Test que número de colores y porcentajes coincidan."""
+        rojo = Color(255, 0, 0, "Rojo")
+        azul = Color(0, 0, 255, "Azul")
+        
+        with self.assertRaises(ValueError):
+            self.blender.mezclar([rojo, azul], [100.0])
+
 
 class TestColorFactory(unittest.TestCase):
     
@@ -46,6 +86,7 @@ class TestColorFactory(unittest.TestCase):
         """Test preset que no existe."""
         with self.assertRaises(ValueError):
             self.factory.crear_color_preset("color_inexistente")
+
 
 class TestColorMixerCore(unittest.TestCase):
     
@@ -91,6 +132,7 @@ class TestColorMixerCore(unittest.TestCase):
         self.assertIs(resultado, self.mixer)  # Builder pattern
         self.assertEqual(self.mixer.colores_actuales.tamaño(), 0)
         self.assertEqual(len(self.mixer.porcentajes_actuales), 0)
+
 
 if __name__ == '__main__':
     unittest.main()

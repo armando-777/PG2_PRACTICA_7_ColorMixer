@@ -1,14 +1,19 @@
-
 import os
 import json
 from typing import List, Tuple, Optional
 from .estructuras import Color
 
+
 class VisualExporter:
     """Clase para exportar paletas de colores a diferentes formatos visuales."""
     
-    def __init__(self):
-        self.directorio_salida = "colormixer_exports"
+    def __init__(self, directorio_salida: str = None):
+        self.directorio_salida = directorio_salida or "colormixer_exports"
+        self._crear_directorio_salida()
+    
+    def configurar_directorio_salida(self, directorio: str):
+        """Configura el directorio de salida para los exports."""
+        self.directorio_salida = directorio
         self._crear_directorio_salida()
     
     def crear_swatch(self, colores: List[Color], ancho_muestra: int = 100, alto_muestra: int = 100) -> str:
@@ -358,4 +363,3 @@ class VisualExporter:
             return Color(0, 0, 0, "Negro por defecto")
         
         return min(colores, key=lambda c: (c.r + c.g + c.b) / 3)
-

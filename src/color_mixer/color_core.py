@@ -3,23 +3,66 @@ import os
 from typing import List, Tuple, Dict, Optional
 from .estructuras import Color, ListaEnlazadaColores
 
+
+class ColorBlender:
+    """Clase dedicada a realizar mezclas de colores."""
+    
+    def __init__(self):
+        pass
+    
+    def mezclar(self, colores: List[Color], porcentajes: List[float]) -> Color:
+        """
+        Realiza la mezcla de colores según los porcentajes especificados.
+        
+        Args:
+            colores: Lista de colores a mezclar
+            porcentajes: Lista de porcentajes (deben sumar 100)
+        
+        Returns:
+            Color resultante de la mezcla
+        
+        Raises:
+            ValueError: Si los colores o porcentajes son inválidos
+        """
+        if not colores:
+            raise ValueError("No hay colores para mezclar")
+        
+        if len(colores) != len(porcentajes):
+            raise ValueError("Número de colores debe coincidir con número de porcentajes")
+        
+        if abs(sum(porcentajes) - 100.0) > 0.01:
+            raise ValueError("Los porcentajes deben sumar 100%")
+        
+        r_total = sum(color.r * (porcentaje / 100) for color, porcentaje in zip(colores, porcentajes))
+        g_total = sum(color.g * (porcentaje / 100) for color, porcentaje in zip(colores, porcentajes))
+        b_total = sum(color.b * (porcentaje / 100) for color, porcentaje in zip(colores, porcentajes))
+        
+        return Color(int(r_total), int(g_total), int(b_total))
+
+
 class ColorHistory:
     """Singleton para mantener el historial de mezclas."""
     
     _instancia = None
     _inicializado = False
     
-    def __new__(cls):
+    def __new__(cls, ruta_guardado: str = None):  # ← CAMBIO: Agregar parámetro
         if cls._instancia is None:
             cls._instancia = super().__new__(cls)
         return cls._instancia
     
-    def __init__(self):
+    def __init__(self, ruta_guardado: str = None):
         if not ColorHistory._inicializado:
             self.historial = []
             self.mezclas_personales = {}
+            self.ruta_guardado = ruta_guardado or 'colormixer_history.json'
             self._cargar_datos()
             ColorHistory._inicializado = True
+    
+    def configurar_ruta(self, ruta: str):
+        """Configura la ruta de guardado del historial."""
+        self.ruta_guardado = ruta
+        self._cargar_datos()
     
     def agregar_mezcla(self, nombre: str, colores: List[Color], porcentajes: List[float], color_resultado: Color):
         """Agrega una mezcla al historial."""
@@ -44,8 +87,8 @@ class ColorHistory:
     def _cargar_datos(self):
         """Carga datos desde archivo JSON."""
         try:
-            if os.path.exists('colormixer_history.json'):
-                with open('colormixer_history.json', 'r', encoding='utf-8') as f:
+            if os.path.exists(self.ruta_guardado):
+                with open(self.ruta_guardado, 'r', encoding='utf-8') as f:
                     datos = json.load(f)
                     self.historial = datos.get('historial', [])
                     self.mezclas_personales = datos.get('mezclas_personales', {})
@@ -59,10 +102,11 @@ class ColorHistory:
                 'historial': self.historial,
                 'mezclas_personales': self.mezclas_personales
             }
-            with open('colormixer_history.json', 'w', encoding='utf-8') as f:
+            with open(self.ruta_guardado, 'w', encoding='utf-8') as f:
                 json.dump(datos, f, indent=2, ensure_ascii=False)
         except Exception as e:
             print(f"Error guardando historial: {e}")
+
 
 class ColorFactory:
     """Factory para crear diferentes tipos de colores."""
@@ -106,15 +150,22 @@ class ColorFactory:
         else:
             raise ValueError(f"Preset '{nombre_preset}' no existe")
 
+
 class ColorMixerCore:
     """Clase principal para mezclar colores - Implementa Builder pattern."""
     
-    def __init__(self):
+    def __init__(self, ruta_guardado: str = None):
         self.colores_actuales = ListaEnlazadaColores()
         self.porcentajes_actuales = []
-        self.history = ColorHistory()
+        self.history = ColorHistory(ruta_guardado)
         self.factory = ColorFactory()
+        self.blender = ColorBlender()
         self._nombres_colores = self._inicializar_nombres_colores()
+    
+    def configurar_ruta_guardado(self, ruta: str):
+        """Configura la ruta de guardado del historial."""
+        self.history.configurar_ruta(ruta)
+        return self
     
     def agregar_color_rgb(self, r: int, g: int, b: int, nombre: str = None, porcentaje: float = 0.0):
         """Agrega un color RGB a la mezcla actual."""
@@ -160,11 +211,8 @@ class ColorMixerCore:
         
         colores = self.colores_actuales.obtener_colores()
         
-        r_total = sum(color.r * (porcentaje / 100) for color, porcentaje in zip(colores, self.porcentajes_actuales))
-        g_total = sum(color.g * (porcentaje / 100) for color, porcentaje in zip(colores, self.porcentajes_actuales))
-        b_total = sum(color.b * (porcentaje / 100) for color, porcentaje in zip(colores, self.porcentajes_actuales))
-        
-        color_resultado = Color(int(r_total), int(g_total), int(b_total))
+        # Usar el ColorBlender para realizar la mezcla
+        color_resultado = self.blender.mezclar(colores, self.porcentajes_actuales)
         color_resultado.nombre = self.obtener_nombre_color(color_resultado)
         
         return color_resultado

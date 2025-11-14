@@ -388,14 +388,14 @@ tests/
 pip install pytest
 
 # Ejecutar todas las pruebas
-python -m pytest tests/ -v
+python -m pytest test/ -v
 
 # Ejecutar pruebas específicas
 
-python -m pytest tests/test_color_core.py -v
-python -m pytest tests/test_inventario_manager.py -v
-python -m pytest tests/test_visual_exports.py -v
-python -m pytest tests/test_estructuras.py -v
+python -m pytest test/test_color_core.py -v
+python -m pytest test/test_inventario_manager.py -v
+python -m pytest test/test_visual_exports.py -v
+python -m pytest test/test_estructuras.py -v
 
 ```
 * Ejemplo de Prueba
