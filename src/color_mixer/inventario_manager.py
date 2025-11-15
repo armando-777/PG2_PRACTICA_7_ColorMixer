@@ -1,7 +1,3 @@
-"""
-Submódulo de gestión de inventario de automóviles
-"""
-
 import json
 import os
 from typing import List, Dict, Optional
